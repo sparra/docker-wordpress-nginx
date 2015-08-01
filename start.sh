@@ -4,7 +4,8 @@ if [ ! -f /usr/share/nginx/www/wp-config.php ]; then
   /usr/bin/mysqld_safe & 
   sleep 10s
   # Here we generate random passwords (thank you pwgen!). The first two are for mysql users, the last batch for random keys in wp-config.php
-  WORDPRESS_DB="wordpress"
+  SUFFIX=$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 4)
+  WORDPRESS_DB=wp${SUFFIX}
   MYSQL_PASSWORD=`pwgen -c -n -1 12`
   WORDPRESS_PASSWORD=`pwgen -c -n -1 12`
   #This is so the passwords show up in logs. 
@@ -49,7 +50,7 @@ ENDL
 
   mysqladmin -u root password $MYSQL_PASSWORD
   mysql -uroot -p$MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '$MYSQL_PASSWORD' WITH GRANT OPTION; FLUSH PRIVILEGES;"
-  mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE wordpress; GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpress'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'; FLUSH PRIVILEGES;"
+  mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE $WORDPRESS_DB; GRANT ALL PRIVILEGES ON $WORDPRESS_DB.* TO '$WORDPRESS_DB'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'; FLUSH PRIVILEGES;"
   killall mysqld
 fi
 
