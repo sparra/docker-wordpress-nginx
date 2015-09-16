@@ -50,6 +50,21 @@ RUN rm -rf /usr/share/nginx/www
 RUN mv /usr/share/nginx/wordpress /usr/share/nginx/www
 RUN chown -R www-data:www-data /usr/share/nginx/www
 
+# Install OPENSSH Server
+
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+#RUN echo 'root:screencast' | chpasswd
+RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
+
+CMD ["/usr/sbin/sshd", "-D"]
+
 # Wordpress Initialization and Startup Script
 ADD ./start.sh /start.sh
 RUN chmod 755 /start.sh
@@ -57,6 +72,7 @@ RUN chmod 755 /start.sh
 # private expose
 EXPOSE 3306
 EXPOSE 80
+EXPOSE 22
 
 # volume for mysql database and wordpress install
 VOLUME ["/var/lib/mysql", "/usr/share/nginx/www"]
